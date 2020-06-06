@@ -20,6 +20,7 @@ class Boting {
 
     public function __construct($token) {
         $this->LatUpdate = 0;
+        $this->Offset = -1;
         $this->Token = $token;
         $this->sonucm = "";
         $this->asyncRequest = new AsyncRequest();
@@ -31,7 +32,7 @@ class Boting {
             $this->httpSonuc = $response->getHttpCode();
             $this->sonuc = $response->getBody();
         };
-        $this->asyncRequest->enqueue(new Request($this->Base . $this->Token . '/getUpdates?timeout=10&offset=-1'), $sonuc);
+        $this->asyncRequest->enqueue(new Request($this->Base . $this->Token . '/getUpdates?timeout=10&offset=' . $this->Offset), $sonuc);
         $this->asyncRequest->run(); 
         if ($this->httpSonuc == "409") {
             echo "\nInvalid token\n";
@@ -42,6 +43,7 @@ class Boting {
         if (count($sonuc) >= 1) {
             $sonuc = array_reverse($sonuc)[0];
             if ($sonuc["update_id"] != $this->LatUpdate) {
+                $this->Offset += 1;
                 $this->LatUpdate = $sonuc["update_id"];
                 return $sonuc;
             } else {
