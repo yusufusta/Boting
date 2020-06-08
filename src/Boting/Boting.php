@@ -43,7 +43,6 @@ class Boting {
         if (count($sonuc) >= 1) {
             $sonuc = array_reverse($sonuc)[0];
             if ($sonuc["update_id"] != $this->LatUpdate) {
-                $this->Offset += 1;
                 $this->LatUpdate = $sonuc["update_id"];
                 return $sonuc;
             } else {
