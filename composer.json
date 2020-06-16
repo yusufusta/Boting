@@ -15,7 +15,7 @@
       }
     ],
     "require": {
-        "async-request/async-request": "^1.0"
+        "guzzlehttp/guzzle": "^6.5"
     },
     "autoload": {
         "psr-4": {
@@ -28,4 +28,3 @@
     },
     "license": "MIT"
 }
-  

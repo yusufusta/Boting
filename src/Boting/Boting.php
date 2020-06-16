@@ -1,75 +1,53 @@
 <?php
 namespace Boting;
 
-use AsyncRequest\Request;
-use AsyncRequest\Response;
-use AsyncRequest\AsyncRequest;
-use AsyncRequest\IRequest;
+use GuzzleHttp\Client;
+use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Promise;
 
+use GuzzleHttp\Exception\RequestException;
 use Exception;
 
 class Boting {
-    private $Base = "https://api.telegram.org/bot";
     public $Token = "";
-    private $asyncRequest;
-    private $asyncMethod;
-    private $LatUpdate;
-    private $sonuc;
-    private $sonucm;
-    public $httpSonuc;
+    public $Client;
 
     public function __construct($token) {
         $this->LatUpdate = 0;
-        $this->Offset = -1;
-        $this->Token = $token;
-        $this->sonucm = "";
-        $this->asyncRequest = new AsyncRequest();
-        $this->asyncMethod = new AsyncRequest();          
+        $this->Offset = 0;
+        $this->Token = "/bot" . $token . "/";
+        $this->Request = [];
+        $this->Client = new Client(["base_uri" => "https://api.telegram.org" . $this->Token]);
     }
 
     public function getUpdates() {
-        $sonuc = function (Response $response) {
-            $this->httpSonuc = $response->getHttpCode();
-            $this->sonuc = $response->getBody();
-        };
-        $this->asyncRequest->enqueue(new Request($this->Base . $this->Token . '/getUpdates?timeout=10&offset=' . $this->Offset), $sonuc);
-        $this->asyncRequest->run(); 
-        if ($this->httpSonuc == "409") {
+        $Request = $this->Client->getAsync('getUpdates?timeout=10&offset=' . $this->Offset, ["verify" => false])->wait();
+
+        if ($Request->getStatusCode() == "409") {
             echo "\nInvalid token\n";
             die();
         }
-        $sonuc = json_decode($this->sonuc, true)["result"];
+        $sonuc = json_decode($Request->getBody()->getContents(), true)["result"];
         if (!is_array($sonuc)) echo $sonuc;
         if (count($sonuc) >= 1) {
-            $sonuc = array_reverse($sonuc)[0];
-            if ($sonuc["update_id"] != $this->LatUpdate) {
-                $this->LatUpdate = $sonuc["update_id"];
+            $sonuc = array_reverse($sonuc);
+            if ($sonuc[0]["update_id"] != $this->LatUpdate) {
+                $this->LatUpdate = $sonuc[0]["update_id"];
+                $this->Offset = $sonuc[0]["update_id"];
                 return $sonuc;
             } else {
                 return false;
-            }    
-        }
+            }
+        }  
     }
 
     public function __call($method, $args) {
-        $msonuc = function (Response $response) {
-            $this->sonucm = $response->getBody();
-        };
+        $this->Request[] = $this->Client->postAsync($method, ["form_params" => $args[0]]);
+        Promise\unwrap($this->Request);
+        return $this;
+    }
 
-        $Istek = new Request($this->Base . $this->Token . "/" . $method);
-
-        $args = $args[0];
-        $Istek->setOption(CURLOPT_POST, true);
-        $Istek->setOption(CURLOPT_POSTFIELDS, http_build_query($args));
-
-        $this->asyncMethod->enqueue($Istek, $msonuc);
-        $this->asyncMethod->run();
-        
-        $jsonsonuc = json_decode($this->sonucm, true);
-        if ($jsonsonuc["ok"] == false) {
-            echo "\n\nError! Error code: {$jsonsonuc['error_code']}, {$jsonsonuc['description']}\n";
-            return;
-        }
-        return $this->sonucm;
+    public function run() {
+        Promise\settle($this->Request)->wait();
     }
 }
