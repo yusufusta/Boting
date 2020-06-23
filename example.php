@@ -38,4 +38,4 @@ $Main = function ($Bot, $Update) {
 
 
 $Bot = new Boting();
-$Bot->Handler("1049255545:AAE2iwoyTrqvadFPREBneMCsL2QoqxdIeRA", $Main);
+$Bot->Handler("YOUR BOT TOKEN", $Main);
