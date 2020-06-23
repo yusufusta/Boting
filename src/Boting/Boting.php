@@ -2,22 +2,17 @@
 namespace Boting;
 
 use GuzzleHttp\Client;
-use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Promise;
-
-use GuzzleHttp\Exception\RequestException;
-use Exception;
 
 class Boting {
     public $Token = "";
     public $Client;
 
-    public function __construct($token) {
+    public function __construct() {
         $this->LatUpdate = 0;
         $this->Offset = 0;
-        $this->Token = "/bot" . $token . "/";
+        $this->Commands = [];
         $this->Request = [];
-        $this->Client = new Client(["base_uri" => "https://api.telegram.org" . $this->Token]);
     }
 
     public function getUpdates() {
@@ -49,5 +44,15 @@ class Boting {
 
     public function run() {
         Promise\settle($this->Request)->wait();
+    }
+
+    public function Handler ($Token, $Function) {
+        $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
+        while (True) {
+            $Update = $this->getUpdates();
+            if ($Update != false) {
+                $Function($this, $Update[0]);
+            }
+        }
     }
 }

@@ -2,15 +2,8 @@
 require __DIR__ . '/vendor/autoload.php';
 use Boting\Boting;
 
-$Bot = new Boting("Your Bot Token");
-
-echo "Bot is working";
-while (True) {
-    $Update = $Bot->getUpdates()[0]; # I want latest Update, If you want fully async do loop #
-    if ($Update == false) {
-        continue;
-    }
-    
+echo "Started";
+$Main = function ($Bot, $Update) {
     if (!empty($Update["inline_query"])) {
         $Bir = ["type" => "article", "id" => 0, "title" => "test", "input_message_content" => ["message_text" => "sad"]];
         $Bot->answerInlineQuery(["inline_query_id" => $Update["inline_query"]["id"], "results" => json_encode([$Bir])]);    
@@ -41,4 +34,8 @@ while (True) {
             $Bot->answerCallbackQuery(["callback_query_id" => $Update["callback_query"]["id"], "text" => "Unknown callback: " . $Data, "show_alert" => true]);
         }
     }
-}
+};
+
+
+$Bot = new Boting();
+$Bot->Handler("1049255545:AAE2iwoyTrqvadFPREBneMCsL2QoqxdIeRA", $Main);
