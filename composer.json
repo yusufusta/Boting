@@ -1,0 +1,31 @@
+{
+    "name": "quiec/boting",
+    "description": "Simple but powerful and Async(multi-thread) Telegram Bot library",
+    "keywords": [
+      "Telegram",
+      "API",
+      "Telegram Bot",
+      "multi-thread"
+    ],
+    "minimum-stability": "stable",
+    "authors": [
+      {
+        "name": "Yusuf Usta",
+        "email": "yusuf@quiec.tech",
+        "homepage": "https://github.com/quiec"
+      }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^6.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Boting\\": "src/Boting/"
+        }
+    },
+    "support": {
+      "issues": "https://github.com/quiec/boting/issues",
+      "source": "https://github.com/quiec/boting"
+    },
+    "license": "MIT"
+}
