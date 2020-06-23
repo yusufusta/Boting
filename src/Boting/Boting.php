@@ -26,9 +26,9 @@ class Boting {
         if (!is_array($sonuc)) echo $sonuc;
         if (count($sonuc) >= 1) {
             $sonuc = array_reverse($sonuc);
-            if ($sonuc[0]["update_id"] != $this->LatUpdate) {
+            if ($sonuc[0]["update_id"] > $this->LatUpdate) {
                 $this->LatUpdate = $sonuc[0]["update_id"];
-                $this->Offset = $sonuc[0]["update_id"];
+                $this->Offset = $sonuc[0]["update_id"] + 1;
                 return $sonuc;
             } else {
                 return false;
@@ -51,7 +51,9 @@ class Boting {
         while (True) {
             $Update = $this->getUpdates();
             if ($Update != false) {
-                $Function($this, $Update[0]);
+                foreach ($Update as $Up) {
+                    $Function($this, $Up);
+                }
             }
         }
     }
