@@ -1,6 +1,6 @@
 <?php
 namespace Boting;
-
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise;
 
@@ -56,7 +56,12 @@ class Boting {
 
 
     public function __call($method, $args) {
-        $this->Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+        try {
+            $this->Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+        } catch (Exception $e) {
+            echo $e;
+        }
+
         return $this;
     }
 
