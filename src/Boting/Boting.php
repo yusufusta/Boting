@@ -10,7 +10,7 @@ class Boting {
 
     public function __construct() {
         $this->LatUpdate = 0;
-        $this->Offset = 0;
+        $this->Offset = -1;
         $this->Commands = [];
         $this->Request = [];
     }
