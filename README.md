@@ -34,11 +34,11 @@ composer require quiec/boting:dev-master
 If Composer is not installed, you can easily install it [Here](https://getcomposer.org/download/).
 
 ## Events
-Boting 2.0 eklenen yeni özellikle artık kolaylık komut ekleyebilir, `on` ile mesaj türlerini yakalayabilirsiniz.
+With the new feature added to Boting 2.0, you can now add convenience commands and capture message types with `on`.
 ### $bot->command
-Komut, **mutlaka regex olmalıdır.**
+The command, must be **regex**.
 
-**Örnek** (_/start komutunu yakalayalım_):
+**Example** (__Let's catch /start command__):
 
 ```php
 $Bot->command("/\/start/m", function ($Update, $Match) use ($Bot) {
@@ -46,33 +46,33 @@ $Bot->command("/\/start/m", function ($Update, $Match) use ($Bot) {
     $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Started bot."]);
 });
 ```
-**Başka komut handler'i ekleyelim:**
+**Let's add another command handler:**
 ```php
 $Bot->command("/[!.\/]start/m", function ($Update, $Match) use ($Bot) {
     $ChatId = $Update["message"]["chat"]["id"]; 
     $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Started bot."]);
 });
 ```
-Bot artık `/start, !start, .start` komutlarına da yanıt verecektir.
+The bot will now also respond to `/start,!Start,.start` commands.
 
 ### $bot->on
-Bot belirtilen türden bir mesaj gelirse fonksiyonu çalıştıracaktır.
+The bot will execute the function if a message of the specified type arrives.
 
-**On'da match kullanılmamaktadır.**
+**No match is used, On.**
 
-**Örnek** (_fotoğraf gelirse_):
+**Example** (_If the photo comes_):
 ```php
 $Bot->on("photo", function ($Update) use ($Bot) {
     $ChatId = $Update["message"]["chat"]["id"]; 
-    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Fotoğraf geldi"]);
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Photo came"]);
 });
 ```
-On Türlerine [buradan](https://core.telegram.org/bots/api#message) bakabilirsiniz.
+You can look at the On Types [here](https://core.telegram.org/bots/api#message).
 
 ### $bot->answer
-`inline_query` veya `callback_query` yanıt vermek için answer fonksiyonunu kullanabilirsiniz.
+You can use the answer function to answer `inline_query` or` callback_query`.
 
-**Örnek** (_Inline yanıt verelim_):
+**Example** (_Let's answer inline_):
 ```php
 $Bot->answer("inline_query", function ($Update) use ($Bot) {
     $Bir = ["type" => "article", "id" => 0, "title" => "test", "input_message_content" => ["message_text" => "This bot created by Boting..."]];
@@ -80,14 +80,14 @@ $Bot->answer("inline_query", function ($Update) use ($Bot) {
 });
 ```
 
-### Özel Events
-Hazır fonksiyonları kullanmak istemiyorsanız, kendi fonksiyonunuzu tanımlayabilirsiniz.
+### Special Events
+If you do not want to use ready-made functions, you can define your own function.
 ```php
 $Main = function ($Update) {...};
 $Bot->Handler("Token", $Main);
 ```
 
-**Örnek** (_/start mesajına karşılık veren bir fonksiyon_):
+**Example** (_A function that responds to the /start message_):
 ```php
 <?php
 require __DIR__ . '/vendor/autoload.php'; //We include the base of the bot.
@@ -99,7 +99,7 @@ $Main = function ($Bot, $Update) { // We create a function called Main.
         $ChatId = $Update["message"]["chat"]["id"]; // We get the chat id to send messages.
 
         if ($Mesaj === "/start") { // We check if the message is start.
-            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Bot'u başlattınız."]); // We use the sendMessage function.
+            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "You started the bot."]); // We use the sendMessage function.
         }
     }
 };
@@ -109,7 +109,7 @@ $Bot = new Boting(); // We start the base.
 $Bot->Handler("Here ur bot token", $Main); // We define our bot token and function.
 ```
 
-Daha fazla örnek için [bu dosyaya](https://github.com/Quiec/Boting/blob/master/example.php) bir göz atın.
+Take a look at [this file](https://github.com/Quiec/Boting/blob/master/example.php) for more examples.
 ## Commands
 Commands are the same as [BotAPI](https://core.telegram.org/bots/api) commands. You can use BotAPI commands in the same way.
 
@@ -124,7 +124,7 @@ $Bot->sendMessage(["chat_id" => "@fusuf", "text" => "Hello!"]);
 ```
 
 The process is complete.
-Komutlar işlem sonrası Array döndürmektedir.
+Commands return Array, after operation.
 
 ## Examples
 We can show [this file](https://github.com/Quiec/Boting/blob/master/example.php) as a very good example of using the library.
