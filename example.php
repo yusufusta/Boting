@@ -72,4 +72,4 @@ $Bot->answer("callback_query", function ($Update) use ($Bot) {
     }
 });
 
-$Bot->handler("920664706:AAEo8NTV_1q_UP8F93kl3CoeD6CzUgJ7xSo"); 
+$Bot->handler("Your Bot Token"); 
