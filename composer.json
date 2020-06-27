@@ -16,7 +16,8 @@
       }
     ],
     "require": {
-        "guzzlehttp/guzzle": "^6.5"
+        "guzzlehttp/guzzle": "^6.5",
+        "spatie/regex": "^1.4"
     },
     "autoload": {
         "psr-4": {

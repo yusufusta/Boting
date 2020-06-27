@@ -1,41 +1,75 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
-use Boting\Boting;
-
-echo "Started";
-$Main = function ($Bot, $Update) {
-    if (!empty($Update["inline_query"])) {
-        $Bir = ["type" => "article", "id" => 0, "title" => "test", "input_message_content" => ["message_text" => "sad"]];
-        $Bot->answerInlineQuery(["inline_query_id" => $Update["inline_query"]["id"], "results" => json_encode([$Bir])]);    
-    } elseif (!empty($Update["message"])) {
-        $Message = $Update["message"]["text"];
-        $ChatId = $Update["message"]["chat"]["id"];
-
-        if ($Message === "/start") {
-            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Bot Started..."])
-                ->sendMessage(["chat_id" => $ChatId, "text" => "Fully Async"]);    
-        } else if ($Message === "/photo") {
-            $Bot->sendPhoto(["chat_id" => $ChatId, "photo" => "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Telegram_2019_Logo.svg/1200px-Telegram_2019_Logo.svg.png"]);
-        } else if ($Message === "/callback") {
-            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Example message for callback query", "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "Click me", "callback_data" => "test"], ["text" => "Don't click me", "callback_data" => "test2"]]]])]);
-        } else if ($Message === "/keyboard") {
-            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Example message for keyboard", "reply_markup" => json_encode(["keyboard" => [[["text" => "Click me"], ["text" => "Don't click me"]]]])]);
-        } else if ($Message === "Click me") {
-            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Thanks for click"]);
-        } else if ($Message === "Don't click me") {
-            $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Why clicked?!", "reply_markup" => json_encode(["remove_keyboard" => TRUE])]);
-        }
-    
-    } elseif (!empty($Update["callback_query"])) {
-        $Data = $Update["callback_query"]["data"];
-        if ($Data == "test") {
-            $Bot->editMessageText(["chat_id" => $Update["callback_query"]["message"]["chat"]["id"], "message_id" => $Update["callback_query"]["message"]["message_id"], "text" => "You clicked button!"]);
-        } else {
-            $Bot->answerCallbackQuery(["callback_query_id" => $Update["callback_query"]["id"], "text" => "Unknown callback: " . $Data, "show_alert" => true]);
-        }
-    }
-};
-
+require __DIR__ . '/vendor/autoload.php'; 
+use Boting\Boting; 
 
 $Bot = new Boting();
-$Bot->Handler("YOUR BOT TOKEN", $Main);
+
+$Bot->command("/[!.\/]start/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Started bot."]);
+});
+
+$Bot->command("/\/name ?(.*)/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Name = $Match->group(1);
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Hello, $Name"]);
+});
+
+$Bot->command("/\/photo/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Bot->sendPhoto(["chat_id" => $ChatId, "photo" => "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Telegram_2019_Logo.svg/1200px-Telegram_2019_Logo.svg.png"]);
+});
+
+$Bot->command("/\/callback/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Example message for callback query", "reply_markup" => json_encode(["inline_keyboard" => [[["text" => "Click me", "callback_data" => "test"], ["text" => "Don't click me", "callback_data" => "test2"]]]])]);
+});
+
+$Bot->command("/\/keyboard/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Example message for keyboard", "reply_markup" => json_encode(["keyboard" => [[["text" => "Click me"], ["text" => "Don't click me"]]]])]);
+});
+
+$Bot->command("/Click me/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Thanks for click"]);
+});
+
+$Bot->command("/Don\'t click me/m", function ($Update, $Match) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Why clicked?!", "reply_markup" => json_encode(["remove_keyboard" => TRUE])]);
+});
+
+$Bot->on("sticker", function ($Update) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    $MId = $Update["message"]["message_id"];
+    $bir = microtime(true);
+    $First = $Bot->sendMessage(["chat_id" => $ChatId, "text" => "I don't like stickers."]);
+    $Bot->deleteMessage(["chat_id" => $ChatId, "message_id" => $MId]);
+    $Bot->editMessageText(["chat_id" => $ChatId, "message_id" => $First["result"]["message_id"], "text" => "Deleted in " . (microtime(true) - $bir) . "seconds"]);
+});
+
+$Bot->on("photo", function ($Update) use ($Bot) {
+    $ChatId = $Update["message"]["chat"]["id"]; 
+    echo $FileId = $Update["message"]["photo"][2]["file_id"]; 
+    $Ilk = $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Downloading "]);
+    $FileName = $Bot->downloadFile($FileId);
+    $Bot->editMessageText(["chat_id" => $ChatId, "message_id" => $Ilk["result"]["message_id"], "text" => "Downloaded file as $FileName"]);
+
+});
+
+$Bot->answer("inline_query", function ($Update) use ($Bot) {
+    $Bir = ["type" => "article", "id" => 0, "title" => "test", "input_message_content" => ["message_text" => "This bot created"]];
+    $Bot->answerInlineQuery(["inline_query_id" => $Update["inline_query"]["id"], "results" => json_encode([$Bir])]);    
+});
+
+$Bot->answer("callback_query", function ($Update) use ($Bot) {
+    $Data = $Update["callback_query"]["data"];
+    if ($Data == "test") {
+        $Bot->editMessageText(["chat_id" => $Update["callback_query"]["message"]["chat"]["id"], "message_id" => $Update["callback_query"]["message"]["message_id"], "text" => "You clicked button!"]);
+    } else {
+        $Bot->answerCallbackQuery(["callback_query_id" => $Update["callback_query"]["id"], "text" => "Unknown callback: " . $Data, "show_alert" => true]);
+    }
+});
+
+$Bot->handler("920664706:AAEo8NTV_1q_UP8F93kl3CoeD6CzUgJ7xSo"); 

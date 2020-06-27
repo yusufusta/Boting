@@ -3,6 +3,7 @@ namespace Boting;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise;
+use Spatie\Regex\Regex;
 
 class Boting {
     public $Token = "";
@@ -12,6 +13,12 @@ class Boting {
         $this->LatUpdate = 0;
         $this->Offset = -1;
         $this->Commands = [];
+        
+        $this->answerType = ["inline_query", "callback_query"];
+        $this->answerTypes = [];
+
+        $this->Type = ["animation", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "contact", "dice", "game", "poll", "venue", "location", "new_chat_members", "left_chat_member", "new_chat_title", "new_chat_photo", "delete_chat_photo", "group_chat_created", "supergroup_chat_created", "pinned_message", "text"];
+        $this->Types = [];
         $this->Request = [];
     }
 
@@ -49,7 +56,7 @@ class Boting {
         }
     
         $Request = $Download->getAsync("https://api.telegram.org" . "/file/bot" . $Token . "/" . $Result["file_path"])->wait()->getBody()->getContents();    
-    
+        
         file_put_contents($fileName, $Request);
         return $fileName;
     }
@@ -57,27 +64,138 @@ class Boting {
 
     public function __call($method, $args) {
         try {
-            $this->Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+            $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
         } catch (Exception $e) {
             echo $e;
         }
 
-        return $this;
+        return json_decode($Request->getBody()->getContents(), true);
     }
 
-    public function body() {
-        $Req = $this->Request->getBody()->getContents();
-        return $Req;
+    public function command($commands = "/\/start/m", $callback) {
+        if (is_array($commands)) {
+            foreach ($commands as $command) {
+                if (empty($this->Commands[$command])) {
+                    $this->Commands[$command] = [$command, $callback];
+                } else {
+                    echo "$command already defined!";
+                    continue;
+                }
+            }
+        } else {
+            if (empty($this->Commands[$commands])) {
+                $this->Commands[$commands] = [$commands, $callback];;
+            } else {
+                echo "$commands already defined!";
+                return;
+            }
+        }
+        return true;
     }
 
-    public function Handler ($Token, $Function) {
+    public function on($types, $callback) {
+        if (is_array($types)) {
+            foreach ($types as $type) {
+                if (empty($this->Types[$type])) {
+                    if (in_array($type, $this->Type)) {
+                        $this->Types[$type] = [$type, $callback];
+                    } else {
+                        echo "$type invalid type!";
+                        continue;      
+                    }
+                } else {
+                    echo "$type already defined!";
+                    continue;
+                }
+            }
+        } else {
+            if (empty($this->Types[$types])) {
+                if (in_array($types, $this->Type)) {
+                    $this->Types[$types] = [$types, $callback];
+                } else {
+                    echo "$types invalid type!";
+                    return;      
+                }
+            } else {
+                echo "$types already defined!";
+                return;
+            }
+        }
+        return true;
+    }
+
+    private function isCommand($Update) {
+        if(!empty($Update["message"]["text"])) {
+            $Text = $Update["message"]["text"];
+            foreach ($this->Commands as $Command) {
+                $Match = Regex::match($Command[0], $Text);
+                if ($Match->hasMatch()) {
+                    return [$Command[1], $Match];
+                }
+            }
+
+            if (!empty($this->Types["text"])) {
+                return [$this->Types["text"][1]];
+            } else {
+                return false;
+            }
+        } else if (!empty($Update["callback_query"])) {
+            if (!empty($this->answerType["callback_query"])) {
+                return [$this->answerType["callback_query"][1]];
+            }
+            return false;
+        } else if (!empty($Update["inline_query"])) {
+            if (!empty($this->answerType["inline_query"])) {
+                return [$this->answerType["inline_query"][1]];
+            }
+            return false;
+        } else {
+            if (empty($Update["callback_query"]) || empty($Update["inline_query"])) {
+                foreach ($this->Type as $Tip) {
+                    if (!empty($Update["message"][$Tip])) {
+                        if (!empty($this->Types[$Tip])) {
+                            return [$this->Types[$Tip][1]];
+                        }
+                    }
+                }
+                return false;    
+            }
+        return false;
+        }
+    }
+
+    public function answer($query, $callback) {
+        if (!in_array($query, $this->answerType)) {
+            echo "$query invalid type.";
+            return;
+        }
+        if (empty($this->answerType[$query])) {
+            $this->answerType[$query] = [$query, $callback];;
+        } else {
+            echo "$query already defined!";
+            return;
+        }
+    }
+
+    public function handler ($Token, $CallBack = NULL) {
         $this->Token = $Token;
         $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
         while (True) {
             $Update = $this->getUpdates();
             if ($Update != false) {
                 foreach ($Update as $Up) {
-                    $Function($this, $Up);
+                    if ($CallBack === NULL) {
+                        $Command = $this->isCommand($Up);
+                        if ($Command !== false) {
+                            if (count($Command) === 2) {
+                                $Command[0]($Up, $Command[1]);
+                            } else {
+                                $Command[0]($Up);
+                            }
+                        }    
+                    } else {
+                        $CallBack($Up);
+                    }
                 }
             }
         }
