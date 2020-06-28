@@ -69,7 +69,12 @@ class Boting {
             echo $e;
         }
 
-        return json_decode($Request->getBody()->getContents(), true);
+        try {
+            return json_decode($Request->getBody()->getContents(), true);
+        } catch (Exception $e) {
+            echo $e;
+            return false;
+        }
     }
 
     public function command($commands = "/\/start/m", $callback) {
