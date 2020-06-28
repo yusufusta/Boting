@@ -93,7 +93,8 @@ $Bot->Handler("Token", $Main);
 require __DIR__ . '/vendor/autoload.php'; //We include the base of the bot.
 use Boting\Boting; // We say we want to use the base.
 
-$Main = function ($Bot, $Update) { // We create a function called Main.
+$Bot = new Boting(); // We start the base.
+$Main = function ($Update) use ($Bot) { // We create a function called Main.
     if (!empty($Update["message"])) { // We check if a message has arrived.
         $Mesaj = $Update["message"]["text"]; // We throw the message into the variable.
         $ChatId = $Update["message"]["chat"]["id"]; // We get the chat id to send messages.
@@ -103,9 +104,6 @@ $Main = function ($Bot, $Update) { // We create a function called Main.
         }
     }
 };
-
-
-$Bot = new Boting(); // We start the base.
 $Bot->Handler("Here ur bot token", $Main); // We define our bot token and function.
 ```
 
