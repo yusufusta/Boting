@@ -4,7 +4,6 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise;
 use Spatie\Regex\Regex;
-
 class Boting {
     public $Token = "";
     public $Client;
@@ -67,6 +66,7 @@ class Boting {
             $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
         } catch (Exception $e) {
             echo $e;
+            return false;
         }
 
         try {
