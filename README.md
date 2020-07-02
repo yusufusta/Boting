@@ -14,7 +14,7 @@ _Boting_, The best Telegram Bot library for fast and asynchronous bot with PHP.
 * Single file, small size, simple to upload.
 * File download
 * Events
-* Currently works only with the getUpdates method. Webhook support will be added in future releases. 
+* WebHook & GetUpdates support 
 ## Requirements
 If you can install [Guzzle](http://docs.guzzlephp.org/en/stable/overview.html#requirements), you can use it easily.
 
@@ -32,6 +32,23 @@ composer require quiec/boting:dev-master
 ```
 
 If Composer is not installed, you can easily install it [Here](https://getcomposer.org/download/).
+
+## Get Update
+You can get Update with two ways;
+
+### Webhook
+If you are going to receive Updates with Webhook method, just add "true" to the handler.
+
+```php
+...
+$Bot->Handler("Token", true);
+```
+### Get Updates
+This method is used by default. You don't need to add anything extra.
+```php
+...
+$Bot->Handler("Token");
+```
 
 ## Events
 With the new feature added to Boting 2.0, you can now add convenience commands and capture message types with `on`.
@@ -82,9 +99,11 @@ $Bot->answer("inline_query", function ($Update) use ($Bot) {
 
 ### Special Events
 If you do not want to use ready-made functions, you can define your own function.
+
+❗️Type `true` if you are going to use Webhook or `false` if you will get it with GetUpdates.
 ```php
 $Main = function ($Update) {...};
-$Bot->Handler("Token", $Main);
+$Bot->Handler("Token", false, $Main);
 ```
 
 **Example** (_A function that responds to the /start message_):
@@ -104,10 +123,8 @@ $Main = function ($Update) use ($Bot) { // We create a function called Main.
         }
     }
 };
-$Bot->Handler("Here ur bot token", $Main); // We define our bot token and function.
+$Bot->Handler("Here ur bot token", false, $Main); // We define our bot token and function.
 ```
-
-Take a look at [this file](https://github.com/Quiec/Boting/blob/master/example.php) for more examples.
 ## Commands
 Commands are the same as [BotAPI](https://core.telegram.org/bots/api) commands. You can use BotAPI commands in the same way.
 

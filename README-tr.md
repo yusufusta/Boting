@@ -13,7 +13,7 @@ _Boting_, PHP ile hızlı ve asenkron bot yazmanız için en iyi Telegram Bot k�
 * Her zaman en son BotAPI'ye uygun
 * Tek dosya, boyutu küçük, yüklenmesi basit.
 * Aynı anda birden fazla komut çalıştırabilirsiniz
-* Şu anlık sadece getUpdates methodu ile çalışmaktadır. İleri ki sürümler de webhook desteği gelecektir. 
+* WebHook & GetUpdates desteği. 
 ## Gereksinimler
 Eğer [Guzzle](http://docs.guzzlephp.org/en/stable/overview.html#requirements) yükleyebiliyorsanız rahatlıkla kullanabilirsiniz.
 
@@ -31,6 +31,24 @@ composer require quiec/boting:dev-master
 ```
 
 Eğer Composer yüklü değilse, [bu adresten](https://getcomposer.org/download/) kolaylıkla yükleyebilirsiniz.
+
+## Update Alma
+İki yol ile ile Update alabilirsiniz;
+
+### Webhook
+Webhook yöntemi ile Update'leri alacak iseniz handler'e "true" eklemeniz yeterli.
+
+```php
+...
+$Bot->Handler("Token", true);
+```
+### Get Updates
+Default olarak bu yöntem kullanılmaktadır. Ekstradan bir şey eklemenize gerek yoktur.
+```php
+...
+$Bot->Handler("Token");
+```
+
 
 ## Olaylar
 Boting 2.0 eklenen yeni özellikle artık kolaylık komut ekleyebilir, `on` ile mesaj türlerini yakalayabilirsiniz.
@@ -86,6 +104,7 @@ $Main = function ($Update) {...};
 $Bot->Handler("Token", $Main);
 ```
 
+❗️Webhook kullanacaksanız `true`, GetUpdates ile alacaksanız `false` yazın.
 **Örnek** (_/start mesajına karşılık veren bir fonksiyon_):
 ```php
 <?php
@@ -103,7 +122,7 @@ $Main = function ($Update) use ($Bot) { // We create a function called Main.
         }
     }
 };
-$Bot->Handler("Here ur bot token", $Main); // We define our bot token and function.
+$Bot->Handler("Here ur bot token", false, $Main); // We define our bot token and function.
 ```
 
 Daha fazla örnek için [bu dosyaya](https://github.com/Quiec/Boting/blob/master/example.php) bir göz atın.

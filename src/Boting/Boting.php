@@ -4,6 +4,8 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise;
 use Spatie\Regex\Regex;
+use Amp\Loop;
+
 class Boting {
     public $Token = "";
     public $Client;
@@ -22,24 +24,32 @@ class Boting {
     }
 
     public function getUpdates() {
-        $Request = $this->Client->getAsync('getUpdates?timeout=10&offset=' . $this->Offset, ["verify" => false])->wait();
+        if ($this->WebHook == false) {
+            $Request = $this->Client->getAsync('getUpdates?timeout=10&offset=' . $this->Offset, ["verify" => false])->wait();
+            $Body = $Request->getBody()->getContents();
 
-        if ($Request->getStatusCode() == "409") {
-            echo "\nInvalid token\n";
-            die();
+            if ($Request->getStatusCode() == "409") {
+                echo "\nInvalid token\n";
+                die();
+            }    
+
+            $sonuc = json_decode($Body, true)["result"];
+            if (!is_array($sonuc)) echo $sonuc;
+            if (count($sonuc) >= 1) {
+                $sonuc = array_reverse($sonuc);
+                if ($sonuc[0]["update_id"] > $this->LatUpdate) {
+                    $this->LatUpdate = $sonuc[0]["update_id"];
+                    $this->Offset = $sonuc[0]["update_id"] + 1;
+                    return $sonuc;
+                } else {
+                    return false;
+                }
+            }      
+        } else {
+            $Body = file_get_contents("php://input");
+            return json_decode($Body, true);
         }
-        $sonuc = json_decode($Request->getBody()->getContents(), true)["result"];
-        if (!is_array($sonuc)) echo $sonuc;
-        if (count($sonuc) >= 1) {
-            $sonuc = array_reverse($sonuc);
-            if ($sonuc[0]["update_id"] > $this->LatUpdate) {
-                $this->LatUpdate = $sonuc[0]["update_id"];
-                $this->Offset = $sonuc[0]["update_id"] + 1;
-                return $sonuc;
-            } else {
-                return false;
-            }
-        }  
+
     }
 
     public function downloadFile($FileId, $fileName = NULL) {
@@ -182,27 +192,48 @@ class Boting {
         }
     }
 
-    public function handler ($Token, $CallBack = NULL) {
+    public function handler ($Token, $WebHook = false, $CallBack = NULL) {
         $this->Token = $Token;
-        $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
-        while (True) {
+        if ($WebHook == true) {
+            echo 0;
+            $this->WebHook = true;
+            $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
+            $this->hookClient = new Client();
             $Update = $this->getUpdates();
-            if ($Update != false) {
-                foreach ($Update as $Up) {
-                    if ($CallBack === NULL) {
-                        $Command = $this->isCommand($Up);
-                        if ($Command !== false) {
-                            if (count($Command) === 2) {
-                                $Command[0]($Up, $Command[1]);
-                            } else {
-                                $Command[0]($Up);
-                            }
-                        }    
+            if ($CallBack === NULL) {
+                $Command = $this->isCommand($Update);
+                if ($Command !== false) {
+                    if (count($Command) === 2) {
+                        $Command[0]($Update, $Command[1]);
                     } else {
-                        $CallBack($Up);
+                        $Command[0]($Update);
                     }
-                }
+                }    
+            } else {
+                $CallBack($Update);
             }
+        } else {
+            $this->WebHook = false;
+            $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
+            while (True) {
+                $Update = $this->getUpdates();
+                if ($Update != false) {
+                    foreach ($Update as $Up) {
+                        if ($CallBack === NULL) {
+                            $Command = $this->isCommand($Up);
+                            if ($Command !== false) {
+                                if (count($Command) === 2) {
+                                    $Command[0]($Up, $Command[1]);
+                                } else {
+                                    $Command[0]($Up);
+                                }
+                            }    
+                        } else {
+                            $CallBack($Up);
+                        }
+                    }
+                }    
+            }    
         }
-    }
+    } 
 }
