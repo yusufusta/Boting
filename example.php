@@ -1,12 +1,19 @@
 <?php
 require __DIR__ . '/vendor/autoload.php'; 
 use Boting\Boting; 
+use Boting\Exception; 
 
 $Bot = new Boting();
 
 $Bot->command("/[!.\/]start/m", function ($Update, $Match) use ($Bot) {
-    $ChatId = $Update["message"]["chat"]["id"]; 
-    $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Started bot."]);
+    $ChatId = $Update["message"]["chat"]["id"];
+    try {
+        $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Started bot."]);
+    } catch (Exception $e) {
+        if ($e->getErrorCode() == 400) {
+            echo "User stopped bot!";
+        }
+    }
 });
 
 $Bot->command("/\/name ?(.*)/m", function ($Update, $Match) use ($Bot) {
@@ -51,7 +58,7 @@ $Bot->on("sticker", function ($Update) use ($Bot) {
 
 $Bot->on("photo", function ($Update) use ($Bot) {
     $ChatId = $Update["message"]["chat"]["id"]; 
-    echo $FileId = $Update["message"]["photo"][2]["file_id"]; 
+    $FileId = $Update["message"]["photo"][2]["file_id"]; 
     $Ilk = $Bot->sendMessage(["chat_id" => $ChatId, "text" => "Downloading "]);
     $FileName = $Bot->downloadFile($FileId);
     $Bot->editMessageText(["chat_id" => $ChatId, "message_id" => $Ilk["result"]["message_id"], "text" => "Downloaded file as $FileName"]);
@@ -72,4 +79,4 @@ $Bot->answer("callback_query", function ($Update) use ($Bot) {
     }
 });
 
-$Bot->handler("Your Bot Token"); 
+$Bot->handler("1145282131:AAESHOxq5LTBEbGu8kc0EWaPQRFZ5e9nz-E"); 

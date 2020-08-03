@@ -1,10 +1,36 @@
 <?php
 namespace Boting;
-use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\Promise;
 use Spatie\Regex\Regex;
-use Amp\Loop;
+
+class Exception extends \Exception
+{
+    private $Message = '';
+    private $Description = '';
+
+    public function __construct($Message, $Code = 0, \Exception $Previous = null, $Error = '', $Description = '')
+    {
+        $this->Code = $Code;
+        $this->Message = $Error;
+        $this->Description = $Description;
+        parent::__construct($Message, $Code, $Previous);
+    }
+
+    public function getErrorCode(): string
+    {
+        return $this->Code;
+    }
+
+    public function getErrorDescription(): string
+    {
+        return $this->Description;
+    }
+
+    public function __toString()
+    {
+        return 'Telegram returned an error: ' . $this->Description.PHP_EOL.'Backtrace:'.PHP_EOL.$this->getTraceAsString();
+    }
+}
 
 class Boting {
     public $Token = "";
@@ -21,17 +47,13 @@ class Boting {
         $this->Type = ["animation", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "contact", "dice", "game", "poll", "venue", "location", "new_chat_members", "left_chat_member", "new_chat_title", "new_chat_photo", "delete_chat_photo", "group_chat_created", "supergroup_chat_created", "pinned_message", "text"];
         $this->Types = [];
         $this->Request = [];
+
     }
 
     public function getUpdates() {
         if ($this->WebHook == false) {
             $Request = $this->Client->getAsync('getUpdates?timeout=10&offset=' . $this->Offset, ["verify" => false])->wait();
             $Body = $Request->getBody()->getContents();
-
-            if ($Request->getStatusCode() == "409") {
-                echo "\nInvalid token\n";
-                die();
-            }    
 
             $sonuc = json_decode($Body, true)["result"];
             if (!is_array($sonuc)) echo $sonuc;
@@ -72,18 +94,13 @@ class Boting {
 
 
     public function __call($method, $args) {
-        try {
-            $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
-        } catch (Exception $e) {
-            echo $e;
-            return false;
-        }
+        $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+        $Json = json_decode($Request->getBody()->getContents(), true);
 
-        try {
-            return json_decode($Request->getBody()->getContents(), true);
-        } catch (Exception $e) {
-            echo $e;
-            return false;
+        if ($Json["ok"] === false) {
+            throw new Exception("ERROR_" . $Json["error_code"], $Json["error_code"], NULL, $Json["description"], $Json["description"]);
+        } else {
+            return $Json;
         }
     }
 
@@ -195,9 +212,8 @@ class Boting {
     public function handler ($Token, $WebHook = false, $CallBack = NULL) {
         $this->Token = $Token;
         if ($WebHook == true) {
-            echo 0;
             $this->WebHook = true;
-            $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
+            $this->Client = new Client(["http_errors" => false, "base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
             $this->hookClient = new Client();
             $Update = $this->getUpdates();
             if ($CallBack === NULL) {
@@ -214,7 +230,7 @@ class Boting {
             }
         } else {
             $this->WebHook = false;
-            $this->Client = new Client(["base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
+            $this->Client = new Client(["http_errors" => false, "base_uri" => "https://api.telegram.org" . "/bot" . $Token . "/"]);
             while (True) {
                 $Update = $this->getUpdates();
                 if ($Update != false) {
