@@ -31,7 +31,11 @@ $Bot->command("/\/name ?(.*)/m", function ($Update, $Match) use ($Bot) {
 
 $Bot->command("/\/photo/m", function ($Update, $Match) use ($Bot) {
     $ChatId = $Update["message"]["chat"]["id"]; 
-    $Bot->sendPhoto(["chat_id" => $ChatId, "photo" => "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Telegram_2019_Logo.svg/1200px-Telegram_2019_Logo.svg.png"]);
+    $Bot->sendPhoto(["chat_id" => $ChatId, "photo" => "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Telegram_2019_Logo.svg/1200px-Telegram_2019_Logo.svg.png", "caption" => "from Url"]);
+    
+    # If you are uploading file from local, you must pass true! #
+    $Bot->sendPhoto(["chat_id" => $ChatId, "photo" => fopen("test.png", "r"), "caption" => "from Local"], true);
+    $Bot->sendDocument(["chat_id" => $ChatId, "document" => fopen("test.png", "r"), "caption" => "from Local as Document"], true);
 });
 
 $Bot->command("/\/callback/m", function ($Update, $Match) use ($Bot) {
@@ -86,4 +90,4 @@ $Bot->answer("callback_query", function ($Update) use ($Bot) {
     }
 });
 
-$Bot->handler("1145282131:AAF5JVPTV0iJPQbpO17eAZ_qbVNd_wXS-kc"); 
+$Bot->handler("some token"); 

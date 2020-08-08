@@ -10,10 +10,12 @@ _Boting_, PHP ile hızlı ve asenkron bot yazmanız için en iyi Telegram Bot k�
 
 ## Özellikleri
 * %100 Async (😳)
-* Her zaman en son BotAPI'ye uygun
-* Tek dosya, boyutu küçük, yüklenmesi basit.
-* Aynı anda birden fazla komut çalıştırabilirsiniz
-* WebHook & GetUpdates desteği. 
+* Her zaman son BotApi'ye uygun
+* Tek dosya, küçük boyut, kurması basit.
+* Dosya indirme/yükleme
+* Olaylar
+* WebHook & GetUpdates desteği 
+
 ## Gereksinimler
 Eğer [Guzzle](http://docs.guzzlephp.org/en/stable/overview.html#requirements) yükleyebiliyorsanız rahatlıkla kullanabilirsiniz.
 

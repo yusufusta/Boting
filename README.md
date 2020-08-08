@@ -12,7 +12,7 @@ _Boting_, The best Telegram Bot library for fast and asynchronous bot with PHP.
 * %100 Async (😳)
 * Always compatible with the latest BotAPI
 * Single file, small size, simple to upload.
-* File download
+* File download/upload
 * Events
 * WebHook & GetUpdates support 
 ## Requirements

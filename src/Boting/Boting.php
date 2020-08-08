@@ -43,6 +43,7 @@ class Boting {
         $this->Types = [];
         $this->Request = [];
         $this->errorHandler = false;
+        $this->uploadTypes = ["sendPhoto", "sendAudio", "sendDocument", "sendVideo", "sendAnimation", "sendVoice", "sendVideoNote"];
     }
 
     public function getUpdates() {
@@ -100,7 +101,15 @@ class Boting {
 
 
     public function __call($method, $args) {
-        $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+        if (in_array($method, $this->uploadTypes) && !empty($args[1]) && $args[1] === true) {
+            $MultiPart = [];
+            foreach ($args[0] as $arg => $deger) {
+                $MultiPart[] = ["name" => $arg, "contents" => $deger];
+            }
+            $Request = $this->Client->postAsync($method, ["multipart" => $MultiPart])->wait();
+        } else {
+            $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+        }
         $Json = json_decode($Request->getBody()->getContents(), true);
 
         if ($Json["ok"] === false) {
