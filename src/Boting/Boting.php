@@ -3,31 +3,26 @@ namespace Boting;
 use GuzzleHttp\Client;
 use Spatie\Regex\Regex;
 
-class Exception extends \Exception
-{
+class Exception extends \Exception {
     private $Message = '';
     private $Description = '';
 
-    public function __construct($Message, $Code = 0, \Exception $Previous = null, $Error = '', $Description = '')
-    {
+    public function __construct($Message, $Code = 0, \Exception $Previous = null, $Error = '', $Description = '') {
         $this->Code = $Code;
         $this->Message = $Error;
         $this->Description = $Description;
         parent::__construct($Message, $Code, $Previous);
     }
 
-    public function getErrorCode(): string
-    {
+    public function getErrorCode(): string {
         return $this->Code;
     }
 
-    public function getErrorDescription(): string
-    {
+    public function getErrorDescription(): string {
         return $this->Description;
     }
 
-    public function __toString()
-    {
+    public function __toString() {
         return 'Telegram returned an error: ' . $this->Description.PHP_EOL.'Backtrace:'.PHP_EOL.$this->getTraceAsString();
     }
 }
@@ -47,7 +42,7 @@ class Boting {
         $this->Type = ["animation", "audio", "document", "photo", "sticker", "video", "video_note", "voice", "contact", "dice", "game", "poll", "venue", "location", "new_chat_members", "left_chat_member", "new_chat_title", "new_chat_photo", "delete_chat_photo", "group_chat_created", "supergroup_chat_created", "pinned_message", "text"];
         $this->Types = [];
         $this->Request = [];
-
+        $this->errorHandler = false;
     }
 
     public function getUpdates() {
@@ -55,18 +50,25 @@ class Boting {
             $Request = $this->Client->getAsync('getUpdates?timeout=10&offset=' . $this->Offset, ["verify" => false])->wait();
             $Body = $Request->getBody()->getContents();
 
-            $sonuc = json_decode($Body, true)["result"];
-            if (!is_array($sonuc)) echo $sonuc;
-            if (count($sonuc) >= 1) {
-                $sonuc = array_reverse($sonuc);
-                if ($sonuc[0]["update_id"] > $this->LatUpdate) {
-                    $this->LatUpdate = $sonuc[0]["update_id"];
-                    $this->Offset = $sonuc[0]["update_id"] + 1;
-                    return $sonuc;
-                } else {
-                    return false;
+            $sonuc = json_decode($Body, true);
+            if ($sonuc["ok"] === false) {
+                if ($sonuc["error_code"] === 401) {
+                    throw new Exception("ERROR_" . $sonuc["error_code"], $sonuc["error_code"], NULL, "Invalid Bot Token", "Invalid Bot Token");
                 }
-            }      
+            } else {
+                $sonuc = $sonuc["result"];
+                if (!is_array($sonuc)) return;
+                if (count($sonuc) >= 1) {
+                    $sonuc = array_reverse($sonuc);
+                    if ($sonuc[0]["update_id"] > $this->LatUpdate) {
+                        $this->LatUpdate = $sonuc[0]["update_id"];
+                        $this->Offset = $sonuc[0]["update_id"] + 1;
+                        return $sonuc;
+                    } else {
+                        return false;
+                    }
+                }    
+            }
         } else {
             $Body = file_get_contents("php://input");
             return json_decode($Body, true);
@@ -92,13 +94,21 @@ class Boting {
         return $fileName;
     }
 
+    public function catch($function) {
+        return $this->errorHandler = [$function];
+    }
+
 
     public function __call($method, $args) {
         $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
         $Json = json_decode($Request->getBody()->getContents(), true);
 
         if ($Json["ok"] === false) {
-            throw new Exception("ERROR_" . $Json["error_code"], $Json["error_code"], NULL, $Json["description"], $Json["description"]);
+            if ($this->errorHandler === false) {
+                throw new Exception("ERROR_" . $Json["error_code"], $Json["error_code"], NULL, $Json["description"], $Json["description"]);
+            } else {
+                $this->errorHandler[0](new Exception("ERROR_" . $Json["error_code"], $Json["error_code"], NULL, $Json["description"], $Json["description"]));
+            }
         } else {
             return $Json;
         }

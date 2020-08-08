@@ -5,6 +5,13 @@ use Boting\Exception;
 
 $Bot = new Boting();
 
+$Bot->catch(function ($e) {
+    echo $e;
+
+    // $e->getErrorDescription();
+    // $e->getErrorCode();
+});
+
 $Bot->command("/[!.\/]start/m", function ($Update, $Match) use ($Bot) {
     $ChatId = $Update["message"]["chat"]["id"];
     try {
@@ -79,4 +86,4 @@ $Bot->answer("callback_query", function ($Update) use ($Bot) {
     }
 });
 
-$Bot->handler("1145282131:AAESHOxq5LTBEbGu8kc0EWaPQRFZ5e9nz-E"); 
+$Bot->handler("1145282131:AAF5JVPTV0iJPQbpO17eAZ_qbVNd_wXS-kc"); 
