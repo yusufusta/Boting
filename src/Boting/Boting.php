@@ -30,6 +30,7 @@ class Exception extends \Exception {
 class Boting {
     public $Token = "";
     public $Client;
+    public $Async = false;
 
     public function __construct() {
         $this->LatUpdate = 0;
@@ -106,9 +107,18 @@ class Boting {
             foreach ($args[0] as $arg => $deger) {
                 $MultiPart[] = ["name" => $arg, "contents" => $deger];
             }
-            $Request = $this->Client->postAsync($method, ["multipart" => $MultiPart])->wait();
+            
+            if ($this->Async) {
+                return $Request = $this->Client->postAsync($method, ["multipart" => $MultiPart]);
+            } else {
+                $Request = $this->Client->postAsync($method, ["multipart" => $MultiPart])->wait();
+            }
         } else {
-            $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+            if ($this->Async) {
+                return $Request = $this->Client->postAsync($method, ["form_params" => $args[0]]);
+            } else {
+                $Request = $this->Client->postAsync($method, ["form_params" => $args[0]])->wait();
+            }
         }
         $Json = json_decode($Request->getBody()->getContents(), true);
 
