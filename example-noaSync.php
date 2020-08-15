@@ -5,7 +5,7 @@ use Boting\Exception;
 use Psr\Http\Message\ResponseInterface;
 
 $Bot = new Boting();
-$Bot->Async = true;
+$Bot->Async = false;
 $Bot->catch(function ($e) {
     echo $e;
 
